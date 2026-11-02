@@ -1,9 +1,8 @@
 // Gallery card — lazy poster, title, creator, Free/price badge, likes
 import Link from 'next/link';
 import { Heart, Image as ImageIcon } from 'lucide-react';
+import { formatPrice as price } from '@/lib/format';
 import type { Model } from '@/lib/types';
-
-const price = (cents: number) => `$${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}`;
 
 export default function ModelCard({ model }: { model: Model }) {
   const free = model.priceCents === 0;
