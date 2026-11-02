@@ -1,4 +1,4 @@
-// Broken Design — <vm-model> Custom Element wrapping <model-viewer>
+// Lixyte — <vm-model> Custom Element wrapping <model-viewer>
 if (!customElements.get('model-viewer')) {
   const script = document.createElement('script');
   script.type = 'module';

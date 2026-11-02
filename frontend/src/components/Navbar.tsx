@@ -44,7 +44,7 @@ export default function Navbar() {
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/90 backdrop-blur">
       <nav aria-label="Main" className="mx-auto flex h-16 max-w-[1400px] items-center gap-2 px-4 sm:gap-5 md:px-6">
         <Link href="/" className="whitespace-nowrap text-[15px] font-semibold tracking-wide text-white sm:text-base">
-          Broken Design
+          Lixyte
         </Link>
 
         <ul className="flex items-center gap-3 text-sm sm:gap-5 sm:text-[15px]">

@@ -6,7 +6,7 @@ import { ArrowRight, CodeXml, Coins, LayoutDashboard, Scale, Upload, Zap, type L
 import SectionHeading from '@/components/landing/SectionHeading';
 import CreatorModel from '@/components/creator/CreatorModel';
 
-export const metadata: Metadata = { title: 'Creators — Broken Design' };
+export const metadata: Metadata = { title: 'Creators — Lixyte' };
 
 const HUD_CLIP = 'polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))';
 

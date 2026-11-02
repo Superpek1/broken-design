@@ -1,4 +1,4 @@
-// Root Layout — Broken Design
+// Root Layout — Lixyte
 import type { Metadata } from 'next';
 import { Chakra_Petch, Michroma, Share_Tech_Mono } from 'next/font/google';
 import Footer from '@/components/Footer';
@@ -10,7 +10,7 @@ const michroma = Michroma({ subsets: ['latin'], weight: '400', display: 'swap', 
 const shareTechMono = Share_Tech_Mono({ subsets: ['latin'], weight: '400', display: 'swap', variable: '--font-mono' });
 
 export const metadata: Metadata = {
-  title: 'Broken Design',
+  title: 'Lixyte',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

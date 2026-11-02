@@ -50,7 +50,7 @@ function GoogleMark() {
 
 const COPY = {
   email: {
-    title: 'Welcome to Broken Design',
+    title: 'Welcome to Lixyte',
     lead: 'Enter your email. We’ll check whether you already have an account.',
     submit: 'Continue',
   },

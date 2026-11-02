@@ -29,7 +29,7 @@ export default function Footer() {
     <footer className="relative z-10 border-t border-white/10 bg-black">
       <div className="mx-auto grid max-w-[1400px] gap-10 px-4 py-12 md:grid-cols-[1fr_auto] md:px-6">
         <div>
-          <p className="font-semibold tracking-wide text-white">Broken Design</p>
+          <p className="font-semibold tracking-wide text-white">Lixyte</p>
           <p className="mt-3 max-w-[40ch] text-sm leading-relaxed text-white/65">
             A 3D asset repository and WebGL CDN. Pick a .glb, copy one line of code, ship it.
           </p>
@@ -53,7 +53,7 @@ export default function Footer() {
       </div>
       <div className="border-t border-white/10">
         <p className="mx-auto max-w-[1400px] px-4 py-5 font-mono text-[11px] tracking-[0.08em] text-white/40 md:px-6">
-          © {new Date().getFullYear()} Broken Design
+          © {new Date().getFullYear()} Lixyte
         </p>
       </div>
     </footer>
