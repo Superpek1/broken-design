@@ -16,6 +16,7 @@ dist/
 build/
 .next/
 out/
+*.tsbuildinfo
 
 # Local Disk Storage & Temp Uploads (Managed by cdn-service)
 services/cdn-service/storage_data/*
