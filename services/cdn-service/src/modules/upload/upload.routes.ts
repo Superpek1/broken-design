@@ -58,17 +58,81 @@ uploadRouter.post(
     const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
     try {
+      // 0. Verify seller account status in database (ensure account is active and not suspended)
+      try {
+        const userCheck = await db.query(
+          `SELECT id, role, is_seller, suspended_at FROM users WHERE id = $1`,
+          [req.user!.id]
+        );
+
+        if (userCheck.rows.length > 0) {
+          const dbUser = userCheck.rows[0];
+          if (dbUser.suspended_at !== null) {
+            throw new AppError(
+              403,
+              'ACCOUNT_SUSPENDED',
+              'Your account has been suspended by an administrator. Upload access is blocked.'
+            );
+          }
+          if (!dbUser.is_seller && dbUser.role !== 'creator' && dbUser.role !== 'admin') {
+            throw new AppError(
+              403,
+              'FORBIDDEN',
+              'Seller access is disabled for this account.'
+            );
+          }
+        }
+      } catch (err) {
+        if (err instanceof AppError) throw err;
+      }
+
+      // 1. Extract and validate metadata upfront
+      const {
+        title,
+        description = '',
+        tags = '[]',
+        license = 'CC0',
+        price_cents = 0,
+        currency = 'USD',
+      } = req.body;
+
+      if (!title || typeof title !== 'string' || title.trim() === '') {
+        throw new AppError(400, 'BAD_REQUEST', 'Model title is required');
+      }
+
+      // Validate License Enum against Postgres license_type enum ('CC0', 'CC-BY', 'CC-BY-NC', 'COMMERCIAL')
+      const VALID_LICENSES = ['CC0', 'CC-BY', 'CC-BY-NC', 'COMMERCIAL'] as const;
+      const normalizedLicense = String(license || 'CC0').trim().toUpperCase();
+      if (!VALID_LICENSES.includes(normalizedLicense as any)) {
+        throw new AppError(
+          400,
+          'INVALID_LICENSE',
+          `Invalid license: "${license}". Allowed values: ${VALID_LICENSES.join(', ')}`
+        );
+      }
+
+      const parsedPrice = Math.max(0, parseInt(String(price_cents), 10) || 0);
+
+      // Business Rule (project.md Section 5): Paid models MUST have a preview GLB file for public rotation
+      const previewFile = files?.['preview']?.[0];
+      if (parsedPrice > 0 && !previewFile) {
+        throw new AppError(
+          400,
+          'PREVIEW_REQUIRED',
+          'Paid models require a lightweight preview GLB file (under 5 MB) for public rotation'
+        );
+      }
+
+      // 2. Validate and inspect main GLB file
       const modelFile = files?.['file']?.[0];
       if (!modelFile) {
         throw new AppError(400, 'BAD_REQUEST', 'Main GLB file is required');
       }
 
-      // Check file size against env limit
       if (modelFile.size > env.maxModelSizeBytes) {
         throw new AppError(413, 'FILE_TOO_LARGE', `Model file exceeds maximum limit of ${env.maxModelSizeBytes} bytes`);
       }
 
-      // 1. Validate main GLB magic bytes and header
       const validation = await validateGlbFile(modelFile.path);
       if (!validation.valid) {
         throw new AppError(400, 'INVALID_GLB', validation.reason || 'File is not a valid Binary glTF (GLB v2)');
@@ -76,20 +140,19 @@ uploadRouter.post(
 
       const storage = getStorage();
 
-      // 2. Compute SHA-256 hash (fingerprint) of main model file and store
+      // Store main model by content hash
       const fileHash = await computeFileSha256(modelFile.path);
       await storage.put(`${fileHash}.glb`, modelFile.path);
 
-      // 3. Process preview file (optional)
+      // 3. Process preview file (if provided or required for paid model)
       let previewHash: string | null = null;
-      const previewFile = files?.['preview']?.[0];
       if (previewFile) {
         if (previewFile.size > env.maxPreviewSizeBytes) {
           throw new AppError(413, 'FILE_TOO_LARGE', `Preview file exceeds limit of ${env.maxPreviewSizeBytes} bytes`);
         }
         const previewValidation = await validateGlbFile(previewFile.path);
         if (!previewValidation.valid) {
-          throw new AppError(400, 'INVALID_GLB', 'Preview file is not a valid GLB');
+          throw new AppError(400, 'INVALID_GLB', 'Preview file is not a valid GLB (glTF v2)');
         }
         previewHash = await computeFileSha256(previewFile.path);
         await storage.put(`${previewHash}.glb`, previewFile.path);
@@ -102,38 +165,33 @@ uploadRouter.post(
         if (posterFile.size > env.maxPosterSizeBytes) {
           throw new AppError(413, 'FILE_TOO_LARGE', `Poster file exceeds limit of ${env.maxPosterSizeBytes} bytes`);
         }
+        const allowedMime = ['image/webp', 'image/png', 'image/jpeg'];
+        const ext = path.extname(posterFile.originalname).toLowerCase();
+        if (!allowedMime.includes(posterFile.mimetype) && !['.webp', '.png', '.jpg', '.jpeg'].includes(ext)) {
+          throw new AppError(400, 'INVALID_POSTER', 'Poster must be a valid image file (.webp, .png, or .jpg)');
+        }
         posterHash = await computeFileSha256(posterFile.path);
         await storage.put(`${posterHash}.webp`, posterFile.path);
       }
 
-      // 5. Extract metadata from body
-      const {
-        title,
-        description = '',
-        tags = '[]',
-        license = 'CC0',
-        price_cents = 0,
-        currency = 'USD',
-      } = req.body;
-
-      if (!title || typeof title !== 'string' || title.trim() === '') {
-        throw new AppError(400, 'BAD_REQUEST', 'Title is required');
-      }
-
+      // 5. Sanitize Tags
       let parsedTags: string[] = [];
       if (Array.isArray(tags)) {
-        parsedTags = tags.map((t) => String(t).trim()).filter(Boolean);
+        parsedTags = tags.map((t) => String(t).trim().toLowerCase()).filter(Boolean);
       } else if (typeof tags === 'string') {
         try {
           const parsed = JSON.parse(tags);
-          parsedTags = Array.isArray(parsed) ? parsed : [tags];
+          parsedTags = Array.isArray(parsed)
+            ? parsed.map((t) => String(t).trim().toLowerCase()).filter(Boolean)
+            : [tags.trim().toLowerCase()];
         } catch {
-          parsedTags = tags.split(',').map((t) => t.trim()).filter(Boolean);
+          parsedTags = tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean);
         }
       }
+      parsedTags = Array.from(new Set(parsedTags));
 
-      const parsedPrice = Math.max(0, parseInt(String(price_cents), 10) || 0);
       const ownerId = req.user!.id;
+      const parsedCurrency = String(currency || 'USD').trim().toUpperCase().slice(0, 3);
 
       // 6. Insert record into database
       const result = await db.query(
@@ -148,13 +206,13 @@ uploadRouter.post(
           title.trim(),
           description.trim(),
           parsedTags,
-          license,
+          normalizedLicense,
           fileHash,
           modelFile.size,
           previewHash,
           posterHash,
           parsedPrice,
-          currency.toUpperCase(),
+          parsedCurrency,
         ]
       );
 

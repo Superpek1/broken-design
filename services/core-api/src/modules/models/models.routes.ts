@@ -27,6 +27,15 @@ modelsRouter.delete('/:id', requireAuth, async (req: Request, res: Response, nex
     const userId = req.user!.id;
     const userRole = req.user!.role;
 
+    // 0. Ensure user account is not suspended
+    const userCheck = await db.query(
+      `SELECT suspended_at FROM users WHERE id = $1`,
+      [userId]
+    );
+    if (userCheck.rows.length > 0 && userCheck.rows[0].suspended_at !== null) {
+      throw new AppError(403, 'ACCOUNT_SUSPENDED', 'Your account has been suspended by an administrator');
+    }
+
     // 1. Find model and verify existence
     const findResult = await db.query(
       `SELECT id, owner_id, deleted_at FROM models WHERE id = $1`,

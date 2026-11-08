@@ -4,14 +4,20 @@ import { env } from './config/env';
 import { uploadRouter } from './modules/upload/upload.routes';
 import { cdnRouter } from './modules/cdn/cdn.routes';
 import { errorHandler } from './middlewares/error.middleware';
+import { testDbConnection } from './config/db';
 
 const app = express();
 
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-app.get('/health', (_req, res) => {
-  res.json({ service: 'broken-design-cdn-service', status: 'ok' });
+app.get('/health', async (_req, res) => {
+  const dbStatus = await testDbConnection();
+  res.json({
+    service: 'broken-design-cdn-service',
+    status: 'ok',
+    database: dbStatus,
+  });
 });
 
 app.use('/api', uploadRouter);

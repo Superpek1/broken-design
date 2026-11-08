@@ -75,3 +75,25 @@ CREATE TABLE IF NOT EXISTS comments (
 );
 
 CREATE INDEX IF NOT EXISTS idx_comments_model_id ON comments (model_id);
+
+-- 7. Seed Initial Accounts (Admin must be set in DB, cannot register via UI)
+-- Password for both initial accounts: Admin@BrokenDesign2026!
+INSERT INTO users (email, password_hash, display_name, role, is_seller)
+VALUES (
+    'admin@brokendesign.com',
+    '$2b$10$NTrckoyeBuWvh0BdeqForOSS1zaDO/W4olcjACKVrtUbSBp9dshgS',
+    'Platform Admin',
+    'admin',
+    false
+) ON CONFLICT (email) DO UPDATE
+SET role = 'admin', suspended_at = NULL;
+
+INSERT INTO users (email, password_hash, display_name, role, is_seller)
+VALUES (
+    'creator@brokendesign.com',
+    '$2b$10$NTrckoyeBuWvh0BdeqForOSS1zaDO/W4olcjACKVrtUbSBp9dshgS',
+    'Demo Creator',
+    'creator',
+    true
+) ON CONFLICT (email) DO UPDATE
+SET role = 'creator', is_seller = true, suspended_at = NULL;
