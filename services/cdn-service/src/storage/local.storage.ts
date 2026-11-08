@@ -15,7 +15,16 @@ export class LocalDiskStorage implements StorageAdapter {
   async put(hashKey: string, tempFilePath: string): Promise<void> {
     await fsp.mkdir(this.baseDir, { recursive: true });
     const targetPath = this.resolveSafePath(hashKey);
-    await fsp.rename(tempFilePath, targetPath);
+    try {
+      await fsp.rename(tempFilePath, targetPath);
+    } catch (err: any) {
+      if (err?.code === 'EXDEV') {
+        await fsp.copyFile(tempFilePath, targetPath);
+        await fsp.unlink(tempFilePath).catch(() => undefined);
+      } else {
+        throw err;
+      }
+    }
   }
 
   async getStream(hashKey: string, range?: ByteRange) {
@@ -30,4 +39,3 @@ export class LocalDiskStorage implements StorageAdapter {
     await fsp.unlink(targetPath).catch(() => undefined);
   }
 }
-

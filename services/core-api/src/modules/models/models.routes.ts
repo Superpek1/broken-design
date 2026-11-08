@@ -1,5 +1,7 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
+import { db } from '../../config/db';
 import { requireAuth } from '../../middlewares/auth.middleware';
+import { AppError } from '../../middlewares/error.middleware';
 
 export const modelsRouter = Router();
 
@@ -18,8 +20,41 @@ modelsRouter.patch('/:id', requireAuth, async (req, res) => {
   res.json({ message: `TODO [Member 3]: Update model ${req.params.id}` });
 });
 
-// [Member 3] DELETE /api/models/:id (Soft delete if purchased)
-modelsRouter.delete('/:id', requireAuth, async (req, res) => {
-  res.json({ message: `TODO [Member 3]: Soft delete model ${req.params.id}` });
-});
+// [Ham] DELETE /api/models/:id (Soft delete: only owner or admin can delete)
+modelsRouter.delete('/:id', requireAuth, async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!.id;
+    const userRole = req.user!.role;
 
+    // 1. Find model and verify existence
+    const findResult = await db.query(
+      `SELECT id, owner_id, deleted_at FROM models WHERE id = $1`,
+      [id]
+    );
+
+    if (findResult.rows.length === 0 || findResult.rows[0].deleted_at !== null) {
+      throw new AppError(404, 'NOT_FOUND', 'Model not found or already deleted');
+    }
+
+    const model = findResult.rows[0];
+
+    // 2. Only owner or admin can delete
+    if (model.owner_id !== userId && userRole !== 'admin') {
+      throw new AppError(403, 'FORBIDDEN', 'You can only delete your own models');
+    }
+
+    // 3. Perform Soft Delete (set deleted_at without removing file from storage)
+    const updateResult = await db.query(
+      `UPDATE models SET deleted_at = NOW() WHERE id = $1 RETURNING id, owner_id, title, deleted_at`,
+      [id]
+    );
+
+    res.json({
+      message: 'Model soft deleted successfully',
+      model: updateResult.rows[0],
+    });
+  } catch (err) {
+    next(err);
+  }
+});
