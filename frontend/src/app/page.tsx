@@ -28,20 +28,17 @@ export default async function HomePage() {
         <div className="mx-auto max-w-[1400px] px-4 pt-24 md:px-6">
           <div className="max-w-[850px]">
             <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-hud/70">
-              [ 3D asset repository &amp; CDN ]
+              [ Lixyte &middot; 3D asset repository &amp; CDN ]
             </p>
-            <h1 className="mt-4 font-display text-[clamp(30px,4.6vw,66px)] uppercase leading-[1.02] text-white">
-              Broken &nbsp;
-              {/* <br /> */}
-              <span className="bg-gradient-to-r from-hud via-violet to-amber bg-clip-text text-transparent">
-                design
+            <h1 className="mt-4 font-display text-[clamp(20px,6.4vw,62px)] uppercase leading-[1.02] text-white">
+              3D models,
+              <span className="block whitespace-nowrap bg-gradient-to-r from-hud via-violet to-amber bg-clip-text text-transparent">
+                one line of code
               </span>
             </h1>
             <p className="mt-5 max-w-[46ch] text-[15px] leading-relaxed text-white/65">
-              Lorem ipsum dolor sit, amet consectetur adipisicing elit. Aperiam
-              consectetur quasi voluptates repellat officiis quos dicta
-              suscipit, tempore explicabo, modi esse laudantium inventore fugit
-              officia fuga tenetur commodi et est.
+              Browse free and paid .glb models, then put any of them on your website with one line of code. We host and
+              stream it from a fast CDN, so there is nothing to download or host yourself.
             </p>
           </div>
         </div>
@@ -115,7 +112,7 @@ export default async function HomePage() {
         )}
 
         <section
-          aria-label="Join Broken Design"
+          aria-label="Join Lixyte"
           className="border border-hud/40 bg-[rgba(4,8,18,0.66)] p-6 backdrop-blur-sm md:p-10"
           style={{ clipPath: HUD_CLIP }}
         >

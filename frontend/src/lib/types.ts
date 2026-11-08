@@ -15,6 +15,7 @@ export interface Model {
   likeCount: number;
   downloadCount: number;
   posterUrl?: string;
+  description?: string;
 }
 
 // Search/filter params are not supported (the gallery filter UI is visual only); only paging.

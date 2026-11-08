@@ -6,7 +6,7 @@ import Pagination from '@/components/gallery/Pagination';
 import { fetchModels } from '@/lib/api';
 import { parseParams } from '@/lib/pagination';
 
-export const metadata: Metadata = { title: 'Gallery — Broken Design' };
+export const metadata: Metadata = { title: 'Gallery — Lixyte' };
 
 export default async function GalleryPage({
   searchParams,

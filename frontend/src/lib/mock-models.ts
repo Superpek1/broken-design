@@ -38,6 +38,7 @@ export const MOCK_MODELS: Model[] = VARIANTS.flatMap((suffix, v) =>
     id: `mock-${String(v * ROWS.length + i + 1).padStart(2, '0')}`,
     title: title + suffix,
     creator,
+    description: `${title + suffix} is a ${tags.join(' / ')} model by ${creator}, ready to drop into a scene or embed on a site. Sample text until real descriptions come from the API.`,
     tags,
     license,
     priceCents,
